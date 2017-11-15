@@ -129,6 +129,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\app\SharedContext.h" />
     <ClInclude Include="src\gameobjects\GameObject.h" />
     <ClInclude Include="src\app\Game.h" />
     <ClInclude Include="src\gameobjects\Player.h" />

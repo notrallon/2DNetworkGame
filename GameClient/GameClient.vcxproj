@@ -18,6 +18,20 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\app\Game.cpp" />
+    <ClCompile Include="src\gameobjects\GameObject.cpp" />
+    <ClCompile Include="src\gameobjects\Player.cpp" />
+    <ClCompile Include="src\gameobjects\Projectile.cpp" />
+    <ClCompile Include="src\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\app\Game.h" />
+    <ClInclude Include="src\app\SharedContext.h" />
+    <ClInclude Include="src\gameobjects\GameObject.h" />
+    <ClInclude Include="src\gameobjects\Player.h" />
+    <ClInclude Include="src\gameobjects\Projectile.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{305DAEBE-5AF6-4800-BC58-01A836FAF92D}</ProjectGuid>
@@ -69,7 +83,18 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(SolutionDir)include\;$(ProjectDir)src\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)lib\;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)bin\$(ProjectName)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\$(ProjectName)\intermediates\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(SolutionDir)include\;$(ProjectDir)src\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)lib\;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)bin\$(ProjectName)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\$(ProjectName)\intermediates\$(Configuration)\</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -110,8 +135,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
