@@ -49,6 +49,14 @@ void Player::Update(const float& dt)
 	{
 		m_MousePressed = false;
 	}
+
+	// Update the players info
+	m_PlayerInfo.Position = m_Sprite.getPosition();
+}
+
+PlayerInfo& Player::GetPlayerInfo() 
+{
+	return m_PlayerInfo;
 }
 
 void Player::Draw(sf::RenderWindow& window)

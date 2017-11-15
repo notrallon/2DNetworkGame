@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameObject.h"
+#include <app/Game.h>
 
 #include <vector>
 
@@ -15,9 +16,12 @@ public:
 	virtual void				Draw(sf::RenderWindow& window) override;
 	virtual void				Update(const float& dt) override;
 
+	PlayerInfo&			GetPlayerInfo();
+
 private:
 	void						Shoot();
 
+	PlayerInfo					m_PlayerInfo;
 	sf::RectangleShape			m_Sprite;
 	unsigned short				m_Speed;
 	bool						m_MousePressed;

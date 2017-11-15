@@ -19,6 +19,9 @@ Game::~Game()
 	}
 	m_GameObjects.clear();
 
+	delete m_Context;
+	m_Context = nullptr;
+
 	delete m_Window;
 	m_Window = nullptr;
 }
@@ -28,8 +31,17 @@ void Game::Run()
 	m_Context->game = this;
 	m_Context->window = m_Window;
 
+	static sf::Clock clock;
+	sf::Time time;
+	float elapsed = 0;
+	float tickrate = 1 / 60;
+
 	while (m_Window->isOpen())
 	{
+		time = clock.restart();
+		float dt = time.asSeconds();
+		elapsed += dt;
+
 		sf::Event evnt;
 		while (m_Window->pollEvent(evnt))
 		{
@@ -42,8 +54,22 @@ void Game::Run()
 		// Gamelogic
 		Update();
 
+		// Send Updates
+		if (elapsed > tickrate)
+		{
+			sf::Packet packet;
+
+			packet >> m_Player->GetPlayerInfo();
+
+			m_Socket.send(packet, "10.96.108.73", 55002);
+		}
+
 		// Draw
 		Draw();
+
+		// Recieve packets
+		// Add packets to gameobjects if they don't exist
+		// Update all gameobjects
 	}
 }
 
@@ -54,10 +80,12 @@ void Game::AddObject(GameObject* object)
 
 void Game::Init()
 {
-	m_Window = new sf::RenderWindow(sf::VideoMode(800, 600), "Offline Shooter Game");
+	m_Socket.bind(sf::Socket::AnyPort);
+	m_Window = new sf::RenderWindow(sf::VideoMode(800, 600), "LAN Shooter Game");
 	m_Context = new SharedContext();
 
-	m_GameObjects.push_back(new Player(m_Context));
+	m_Player = new Player(m_Context);
+	m_GameObjects.push_back(m_Player);
 
 }
 
@@ -91,4 +119,16 @@ void Game::Draw()
 	}
 
 	m_Window->display();
+}
+
+
+sf::Packet & operator<<(sf::Packet& packet, const PlayerInfo& s)
+{
+	return packet << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port;
+}
+
+
+sf::Packet & operator>>(sf::Packet& packet, PlayerInfo& s)
+{
+	return packet >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port;
 }

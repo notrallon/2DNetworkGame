@@ -23,7 +23,7 @@
     <ClCompile Include="src\gameobjects\GameObject.cpp" />
     <ClCompile Include="src\gameobjects\Player.cpp" />
     <ClCompile Include="src\gameobjects\Projectile.cpp" />
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\client_main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app\Game.h" />
