@@ -5,7 +5,9 @@
 #include <SFML/Network.hpp>
 #include <gameobjects/GameObject.h>
 
+
 struct SharedContext;
+class Player; 
 
 struct PlayerInfo
 {

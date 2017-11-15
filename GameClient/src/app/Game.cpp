@@ -3,7 +3,6 @@
 #include <gameobjects/Player.h>
 #include <app/SharedContext.h>
 
-
 Game::Game() : m_Window(nullptr), m_Context(nullptr)
 {
 	Init();
@@ -58,8 +57,8 @@ void Game::Run()
 		if (elapsed > tickrate)
 		{
 			sf::Packet packet;
-
-			packet >> m_Player->GetPlayerInfo();
+			
+			packet << m_Player->GetPlayerInfo();
 
 			m_Socket.send(packet, "10.96.108.73", 55002);
 		}
