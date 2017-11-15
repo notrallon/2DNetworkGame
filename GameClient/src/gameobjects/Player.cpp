@@ -54,7 +54,7 @@ void Player::Update(const float& dt)
 	m_PlayerInfo.Position = m_Sprite.getPosition();
 }
 
-PlayerInfo& Player::GetPlayerInfo() 
+const PlayerInfo& Player::GetPlayerInfo() const
 {
 	return m_PlayerInfo;
 }

@@ -16,7 +16,7 @@ public:
 	virtual void				Draw(sf::RenderWindow& window) override;
 	virtual void				Update(const float& dt) override;
 
-	PlayerInfo&			GetPlayerInfo();
+	const PlayerInfo&			GetPlayerInfo() const;
 
 private:
 	void						Shoot();
