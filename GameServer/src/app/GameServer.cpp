@@ -1,4 +1,5 @@
 #include "GameServer.h"
+#include <iostream>
 
 GameServer::GameServer()
 {
@@ -38,7 +39,19 @@ void GameServer::RunServer()
 		sf::IpAddress sender;
 		unsigned short port;
 		// Receive packets
-		m_Socket.receive(recievepacket, sender, port);
+		if (m_Socket.receive(recievepacket, sender, port) == sf::Socket::Done)
+		{
+			std::cout << "Recieved a packet correctly" << std::endl;
+		}
+		else if (m_Socket.receive(recievepacket, sender, port) == sf::Socket::Error)
+		{
+			//Error..
+			std::cerr << "Packet receive ended with error" << std::endl;
+			continue;
+		}
+		//TODO: sockets Receives "No Data, from Noone" 1-2 times. Figure out why.
+		//m_Socket.receive(recievepacket, sender, port);
+		//std::cout << "Recieved a packet" << std::endl;
 
 		// Unpack the data
 		PlayerInfo info;
