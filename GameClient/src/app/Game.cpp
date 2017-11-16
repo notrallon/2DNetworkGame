@@ -1,7 +1,9 @@
 #include "Game.h"
+#include <iostream>
+#include "gameobjects/Player.h"
+#include "app/SharedContext.h"
 
-#include <gameobjects/Player.h>
-#include <app/SharedContext.h>
+#define SERVER_IP "10.96.108.50"
 
 Game::Game() : m_Window(nullptr), m_Context(nullptr)
 {
@@ -13,8 +15,8 @@ Game::~Game()
 {
 	for (auto it : m_GameObjects)
 	{
-		delete it;
-		it = nullptr;
+		delete it.second;
+		it.second = nullptr;
 	}
 	m_GameObjects.clear();
 
@@ -33,7 +35,7 @@ void Game::Run()
 	static sf::Clock clock;
 	sf::Time time;
 	float elapsed = 0;
-	float tickrate = 1 / 60;
+	float tickrate = 1.0f / 60.0f;
 
 	while (m_Window->isOpen())
 	{
@@ -52,21 +54,11 @@ void Game::Run()
 
 		// Gamelogic
 		Update();
-
-		// Send Updates
-		if (elapsed > tickrate)
-		{
-			sf::Packet packet;
-			
-			packet << m_Player->GetPlayerInfo();
-
-			m_Socket.send(packet, "10.96.108.73", 55002);
-		}
-
 		// Draw
 		Draw();
 
-		// Recieve packets
+		
+
 		// Add packets to gameobjects if they don't exist
 		// Update all gameobjects
 	}
@@ -74,34 +66,51 @@ void Game::Run()
 
 void Game::AddObject(GameObject* object)
 {
-	m_GameObjects.push_back(object);
+	//m_GameObjects.push_back(object);
 }
 
 void Game::Init()
 {
 	m_Socket.bind(sf::Socket::AnyPort);
+	m_Socket.setBlocking(true);
 	m_Window = new sf::RenderWindow(sf::VideoMode(800, 600), "LAN Shooter Game");
 	m_Context = new SharedContext();
 
-	m_Player = new Player(m_Context);
-	m_GameObjects.push_back(m_Player);
+	//m_Player = new Player(m_Context, true);
+
+	
+	CreateClientPlayer();
+	// Recieve a message that updates the player info.
+	//Recieve();
+
 
 }
 
 void Game::Update()
 {
 	static sf::Clock clock;
+	static float elapsed = 0;
+	static float tickrate = 1.0f / 60.0f;
 	sf::Time time;
 	float dt;
 
 	time = clock.restart();
 	dt = time.asSeconds();
+	elapsed += dt;
 
-	size_t size = m_GameObjects.size();
-
-	for (size_t i = 0; i < size; i++)
+	// Send Updates
+	if (elapsed > tickrate)
 	{
-		m_GameObjects[i]->Update(dt);
+		Send();
+		elapsed -= tickrate;
+	}
+	// Recieve packets
+	Recieve();
+
+
+	for (ObjectMap::iterator it = m_GameObjects.begin(); it != m_GameObjects.end(); it++)
+	{
+		it->second->Update(dt);
 	}
 
 }
@@ -110,24 +119,136 @@ void Game::Draw()
 {
 	m_Window->clear(sf::Color::Magenta);
 
-	size_t size = m_GameObjects.size();
-
-	for (size_t i = 0; i < size; i++)
+	for (ObjectMap::iterator it = m_GameObjects.begin(); it != m_GameObjects.end(); it++)
 	{
-		m_GameObjects[i]->Draw(*m_Window);
+		it->second->Draw(*m_Window);
 	}
 
 	m_Window->display();
 }
 
+void Game::Send()
+{
+	sf::Packet packet;
+	PlayerInfo info = m_Player->GetPlayerInfo();
+	info.Port = m_Socket.getLocalPort();
+	packet << info;
+
+	sf::Socket::Status status = m_Socket.send(packet, SERVER_IP, 55002);
+
+	switch (status)
+	{
+	case sf::Socket::Done:
+		std::cout << "Socket sent successfully!" << std::endl;
+		break;
+	case sf::Socket::NotReady:
+		std::cout << "Socket NotReady!" << std::endl;
+		break;
+	case sf::Socket::Partial:
+		std::cout << "Socket Partial!" << std::endl;
+		break;
+	case sf::Socket::Disconnected:
+		std::cout << "Socket Disconnected!" << std::endl;
+		break;
+	case sf::Socket::Error:
+		std::cout << "Socket Error!" << std::endl;
+		break;
+	default:
+		break;
+	}
+}
+
+void Game::Recieve()
+{
+	sf::Packet recievePak;
+	sf::IpAddress recieveIP;
+	unsigned short recievePort;
+	m_Socket.setBlocking(false);
+	sf::Socket::Status recieveStatus = m_Socket.receive(recievePak, recieveIP, recievePort);
+	m_Socket.setBlocking(true);
+
+	PlayerInfo recieveInfo;
+	recievePak >> recieveInfo;
+
+	switch (recieveStatus)
+	{
+	case sf::Socket::Done: {
+		Player* player;
+		if (m_GameObjects.find(recieveInfo.ID) == m_GameObjects.end())
+		{
+			player = new Player(m_Context, false);
+			player->SetPlayerInfo(recieveInfo);
+			m_GameObjects.emplace(recieveInfo.ID, player);
+		}
+		// Get an already existing player
+		Player* object = static_cast<Player*>(m_GameObjects.find(recieveInfo.ID)->second);
+		
+
+
+		// Update the players info.
+		object->SetPlayerInfo(recieveInfo);
+	} break;
+	case sf::Socket::NotReady:
+		break;
+	case sf::Socket::Partial:
+		break;
+	case sf::Socket::Disconnected:
+		break;
+	case sf::Socket::Error:
+		break;
+	default:
+		break;
+	}
+}
+
+void Game::CreateClientPlayer()
+{
+	m_Player = new Player(m_Context, true);
+
+	Send();
+
+	sf::Packet recievePak;
+	sf::IpAddress recieveIP;
+	unsigned short recievePort;
+	m_Socket.setBlocking(false);
+	sf::Socket::Status recieveStatus = m_Socket.receive(recievePak, recieveIP, recievePort);
+
+	while (recieveStatus != sf::Socket::Status::Done)
+	{
+		recieveStatus = m_Socket.receive(recievePak, recieveIP, recievePort);
+	}
+
+	m_Socket.setBlocking(true);
+	PlayerInfo recieveInfo;
+	recievePak >> recieveInfo;
+
+	switch (recieveStatus)
+	{
+	case sf::Socket::Done: 
+		m_Player->SetPlayerInfo(recieveInfo);
+		m_GameObjects.emplace(m_Player->GetPlayerInfo().ID, m_Player);
+		break;
+	case sf::Socket::NotReady:
+		break;
+	case sf::Socket::Partial:
+		break;
+	case sf::Socket::Disconnected:
+		break;
+	case sf::Socket::Error:
+		break;
+	default:
+		break;
+	}
+}
+
 
 sf::Packet & operator<<(sf::Packet& packet, const PlayerInfo& s)
 {
-	return packet << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port;
+	return packet << s.ID << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port;
 }
 
 
 sf::Packet & operator>>(sf::Packet& packet, PlayerInfo& s)
 {
-	return packet >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port;
+	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port;
 }

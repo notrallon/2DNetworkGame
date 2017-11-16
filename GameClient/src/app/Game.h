@@ -1,24 +1,24 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <vector>
 #include <SFML/Network.hpp>
-#include <gameobjects/GameObject.h>
+#include <vector>
+#include <map>
 
 
 struct SharedContext;
 class Player; 
+class GameObject;
 
 struct PlayerInfo
 {
+	unsigned int	ID;
 	sf::Vector2f	Position;
 	float			Speed;
 	sf::IpAddress	IP;
 	unsigned short  Port;
 };
 
-sf::Packet& operator<<(sf::Packet& packet, const PlayerInfo& s);
-sf::Packet& operator>>(sf::Packet& packet, PlayerInfo& s);
 
 class Game
 {
@@ -30,14 +30,21 @@ public:
 
 	void						AddObject(GameObject* object);
 
+	friend sf::Packet& operator<<(sf::Packet& packet, const PlayerInfo& s);
+	friend sf::Packet& operator>>(sf::Packet& packet, PlayerInfo& s);
 private:
+	using ObjectMap = std::map<unsigned int, GameObject*>;
 	void						Init();
 	void						Update();
 	void						Draw();
 
+	void						Send();
+	void						Recieve();
+	void						CreateClientPlayer();
+
 	sf::RenderWindow*			m_Window;
 	Player*						m_Player;
-	std::vector<GameObject*>	m_GameObjects;
+	ObjectMap					m_GameObjects;
 
 	sf::UdpSocket				m_Socket;
 
