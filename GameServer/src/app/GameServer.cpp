@@ -3,6 +3,7 @@
 
 GameServer::GameServer()
 {
+	InitServer();
 }
 
 GameServer::~GameServer()
@@ -12,21 +13,24 @@ GameServer::~GameServer()
 void GameServer::InitServer()
 {
 	m_Socket.bind(55002);
+	m_Socket.setBlocking(false);
 }
 
 void GameServer::RunServer()
 {
 	m_Running = true;
 
-	int a = 2;
-	std::string str = "Hej";
-
-	GameServer server;
+	static unsigned int IDCounter = 0;
 
 	static sf::Clock clock;
 	sf::Time time;
 	float elapsed = 0; // for tick rate
 	float frametime = 1 / 60;
+	std::string c = "c";
+
+	// NOTE: The socket won't wait for a recieve to finnish unless we do this.
+	m_Socket.send(c.c_str(), c.length() + 1, "0.0.0.0", 0);
+	m_Socket.setBlocking(true);
 
 	clock.restart();
 	while (m_Running)
@@ -39,35 +43,57 @@ void GameServer::RunServer()
 		sf::IpAddress sender;
 		unsigned short port;
 		// Receive packets
-		if (m_Socket.receive(recievepacket, sender, port) == sf::Socket::Done)
+
+		m_Socket.setBlocking(false);
+		sf::Socket::Status socketStatus = m_Socket.receive(recievepacket, sender, port);
+		m_Socket.setBlocking(true);
+		unsigned int ID = UINT_MAX;
+		PlayerInfo info;
+		switch (socketStatus)
 		{
+		case sf::Socket::Done:
 			std::cout << "Recieved a packet correctly" << std::endl;
-		}
-		else if (m_Socket.receive(recievepacket, sender, port) == sf::Socket::Error)
-		{
-			//Error..
-			std::cerr << "Packet receive ended with error" << std::endl;
+			recievepacket >> info;
+			ID = info.ID;
+			break;
+		case sf::Socket::NotReady:
+			std::cerr << "Socket is not ready!" << std::endl;
+			break;
+		case sf::Socket::Error:
+			std::cerr << "An unexpected error happened." << std::endl;
+			std::cerr << "Port is: " << port << " sender is " << sender.toString() << std::endl;
 			continue;
+		default:
+			break;
 		}
+
 		//TODO: sockets Receives "No Data, from Noone" 1-2 times. Figure out why.
 		//m_Socket.receive(recievepacket, sender, port);
 		//std::cout << "Recieved a packet" << std::endl;
 
-		// Unpack the data
-		PlayerInfo info;
-		recievepacket >> info;
-
 		PlayerInfo* player;
 
-		if (m_Players.find(sender) == m_Players.end())
+		if (m_Players.find(ID) == m_Players.end() && ID != UINT_MAX)
 		{
 			player = new PlayerInfo();
+			IDCounter++;
 			*player = info;
-			m_Players.emplace(sender, player);
+			player->ID = IDCounter;
+			player->IP = sender;
+			player->Port = port;
+			m_Players.emplace(player->ID, player);
+		}
+		else if (ID == UINT_MAX)
+		{
+			std::cout << "ID is max";
+			continue;
+		}
+		else
+		{
+			player = m_Players.find(ID)->second;
 		}
 
 		// Set to new player position.
-		player = m_Players.find(sender)->second;
 		player->Position = info.Position;
 
 		if (elapsed > frametime)
@@ -83,7 +109,8 @@ void GameServer::RunServer()
 				for (PlayerMap::iterator it2 = m_Players.begin(); it2 != m_Players.end(); it2++)
 				{
 					sf::Packet sendpacket;
-					sendpacket >> *it2->second;
+					PlayerInfo* pakInfo = it2->second;
+					sendpacket << *pakInfo;
 					m_Socket.send(sendpacket, playerToSend->IP, playerToSend->Port);
 				}
 			}
@@ -95,11 +122,11 @@ void GameServer::RunServer()
 
 sf::Packet & operator<<(sf::Packet & packet, const PlayerInfo & s)
 {
-	return packet << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port;
+	return packet << s.ID << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port;
 }
 
 
 sf::Packet & operator>>(sf::Packet & packet, PlayerInfo & s)
 {
-	return packet >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port;
+	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port;
 }

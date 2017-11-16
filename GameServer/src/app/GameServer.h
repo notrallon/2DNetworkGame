@@ -5,6 +5,7 @@
 
 struct PlayerInfo
 {
+	unsigned int	ID;
 	sf::Vector2f	Position;
 	float			Speed;
 	sf::IpAddress	IP;
@@ -25,7 +26,7 @@ public:
 
 
 private:
-	using PlayerMap = std::map<sf::IpAddress, PlayerInfo*>;
+	using PlayerMap = std::map<unsigned int, PlayerInfo*>;
 
 	bool			m_Running;
 	sf::UdpSocket	m_Socket;
