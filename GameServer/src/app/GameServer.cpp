@@ -47,6 +47,7 @@ void GameServer::RunServer()
 		m_Socket.setBlocking(false);
 		sf::Socket::Status socketStatus = m_Socket.receive(recievepacket, sender, port);
 		m_Socket.setBlocking(true);
+		// Set default id to max unsigned int value
 		unsigned int ID = UINT_MAX;
 		PlayerInfo info;
 		switch (socketStatus)
@@ -73,15 +74,22 @@ void GameServer::RunServer()
 
 		PlayerInfo* player;
 
-		if (m_Players.find(ID) == m_Players.end() && ID != UINT_MAX)
+		if (m_Players.find(ID) == m_Players.end() && ID != UINT_MAX && ID == 0)
 		{
 			player = new PlayerInfo();
 			IDCounter++;
 			*player = info;
 			player->ID = IDCounter;
+			ID = IDCounter;
 			player->IP = sender;
 			player->Port = port;
-			m_Players.emplace(player->ID, player);
+			m_Players.emplace(ID, player);
+
+			// Create a package and send it back to the player as a confirmation
+			// that they successfully connected and make sure they get the correct ID.
+			sf::Packet confirmationPackage;
+			confirmationPackage << *player;
+			m_Socket.send(confirmationPackage, player->IP, player->Port);
 		}
 		else if (ID == UINT_MAX)
 		{
