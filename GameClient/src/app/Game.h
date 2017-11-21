@@ -5,6 +5,10 @@
 #include <vector>
 #include <map>
 
+enum class SocketType {
+	Player,
+	Disconnect
+};
 
 struct SharedContext;
 class Player; 
@@ -17,6 +21,7 @@ struct PlayerInfo
 	float			Speed;
 	sf::IpAddress	IP;
 	unsigned short  Port;
+	bool			Connected = true;
 };
 
 

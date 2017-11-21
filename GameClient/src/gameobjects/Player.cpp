@@ -27,12 +27,12 @@ Player::Player(SharedContext * context, bool owned) : GameObject::GameObject(con
 	m_ClientOwned = owned;
 	m_PlayerInfo.ID = 0;
 
-
 	playerCount++;
 }
 
 Player::~Player()
 {
+	int hej = 1;
 }
 
 void Player::Update(const float& dt)

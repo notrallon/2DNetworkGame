@@ -13,6 +13,11 @@ Game::Game() : m_Window(nullptr), m_Context(nullptr)
 
 Game::~Game()
 {
+	// Send a packet to the server where info says the player is no longer
+	// connected.
+
+
+
 	for (auto it : m_GameObjects)
 	{
 		delete it.second;
@@ -48,6 +53,13 @@ void Game::Run()
 		{
 			if (evnt.type == sf::Event::Closed)
 			{
+				PlayerInfo info = m_Player->GetPlayerInfo();
+				info.Connected = false;
+				m_Player->SetPlayerInfo(info);
+				sf::Packet packet;
+				packet << info;
+				m_Socket.send(packet, SERVER_IP, 55002);
+
 				m_Window->close();
 			}
 		}
@@ -110,7 +122,10 @@ void Game::Update()
 
 	for (ObjectMap::iterator it = m_GameObjects.begin(); it != m_GameObjects.end(); it++)
 	{
-		it->second->Update(dt);
+		if (it->second != nullptr)
+		{
+			it->second->Update(dt);
+		}
 	}
 
 }
@@ -164,7 +179,14 @@ void Game::Recieve()
 	sf::IpAddress recieveIP;
 	unsigned short recievePort;
 	m_Socket.setBlocking(false);
-	sf::Socket::Status recieveStatus = m_Socket.receive(recievePak, recieveIP, recievePort);
+	sf::Clock clock;
+	sf::Time time = clock.restart();
+	sf::Socket::Status recieveStatus;
+	recieveStatus = sf::Socket::NotReady;
+	while (recieveStatus != sf::Socket::Done && clock.getElapsedTime().asSeconds() < 0.016f)
+	{
+		recieveStatus = m_Socket.receive(recievePak, recieveIP, recievePort);
+	}
 	m_Socket.setBlocking(true);
 
 	PlayerInfo recieveInfo;
@@ -183,10 +205,16 @@ void Game::Recieve()
 		// Get an already existing player
 		Player* object = static_cast<Player*>(m_GameObjects.find(recieveInfo.ID)->second);
 		
-
-
 		// Update the players info.
 		object->SetPlayerInfo(recieveInfo);
+		
+		// If another player disconnected.
+		if (!recieveInfo.Connected)
+		{
+			delete m_GameObjects.find(recieveInfo.ID)->second;
+			m_GameObjects.find(recieveInfo.ID)->second = nullptr;
+			m_GameObjects.erase(recieveInfo.ID);
+		}
 	} break;
 	case sf::Socket::NotReady:
 		break;
@@ -244,11 +272,11 @@ void Game::CreateClientPlayer()
 
 sf::Packet & operator<<(sf::Packet& packet, const PlayerInfo& s)
 {
-	return packet << s.ID << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port;
+	return packet << s.ID << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port << s.Connected;
 }
 
 
 sf::Packet & operator>>(sf::Packet& packet, PlayerInfo& s)
 {
-	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port;
+	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected;
 }

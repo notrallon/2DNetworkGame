@@ -53,7 +53,6 @@ void GameServer::RunServer()
 		switch (socketStatus)
 		{
 		case sf::Socket::Done:
-			std::cout << "Recieved a packet correctly" << std::endl;
 			recievepacket >> info;
 			ID = info.ID;
 			break;
@@ -67,10 +66,6 @@ void GameServer::RunServer()
 		default:
 			break;
 		}
-
-		//TODO: sockets Receives "No Data, from Noone" 1-2 times. Figure out why.
-		//m_Socket.receive(recievepacket, sender, port);
-		//std::cout << "Recieved a packet" << std::endl;
 
 		PlayerInfo* player;
 
@@ -96,6 +91,10 @@ void GameServer::RunServer()
 			std::cout << "ID is max";
 			continue;
 		}
+		else if (m_Players.find(ID)->second == nullptr)
+		{
+			continue;
+		}
 		else
 		{
 			player = m_Players.find(ID)->second;
@@ -103,13 +102,14 @@ void GameServer::RunServer()
 
 		// Set to new player position.
 		player->Position = info.Position;
+		player->Connected = info.Connected;
 
-		if (elapsed > frametime)
+		if (!info.Connected)
 		{
-			// send to clients
-
 			for (PlayerMap::iterator it = m_Players.begin(); it != m_Players.end(); it++)
 			{
+				if (it->second == nullptr)
+					continue;
 				// Grab a player to send info to
 				PlayerInfo* playerToSend = it->second;
 
@@ -117,6 +117,38 @@ void GameServer::RunServer()
 				for (PlayerMap::iterator it2 = m_Players.begin(); it2 != m_Players.end(); it2++)
 				{
 					sf::Packet sendpacket;
+
+					if (it2->second == nullptr)
+						continue;
+
+					PlayerInfo* pakInfo = it2->second;
+					sendpacket << *pakInfo;
+					m_Socket.send(sendpacket, playerToSend->IP, playerToSend->Port);
+				}
+			}
+			//delete m_Players.find(ID)->second;
+			//m_Players.find(ID)->second = nullptr;
+		}
+
+		// Send message to clients x times per second
+		if (elapsed > frametime)
+		{
+			// send to clients
+
+			for (PlayerMap::iterator it = m_Players.begin(); it != m_Players.end(); it++)
+			{
+				if (it->second == nullptr)
+					continue;
+				// Grab a player to send info to
+				PlayerInfo* playerToSend = it->second;
+
+				// Loop through all players and send the info to the recieving player.
+				for (PlayerMap::iterator it2 = m_Players.begin(); it2 != m_Players.end(); it2++)
+				{
+					sf::Packet sendpacket;
+					if (it2->second == nullptr)
+						continue;
+
 					PlayerInfo* pakInfo = it2->second;
 					sendpacket << *pakInfo;
 					m_Socket.send(sendpacket, playerToSend->IP, playerToSend->Port);
@@ -130,11 +162,11 @@ void GameServer::RunServer()
 
 sf::Packet & operator<<(sf::Packet & packet, const PlayerInfo & s)
 {
-	return packet << s.ID << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port;
+	return packet << s.ID << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port << s.Connected;
 }
 
 
 sf::Packet & operator>>(sf::Packet & packet, PlayerInfo & s)
 {
-	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port;
+	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected;
 }

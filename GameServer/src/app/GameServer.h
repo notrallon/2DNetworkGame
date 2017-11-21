@@ -10,6 +10,7 @@ struct PlayerInfo
 	float			Speed;
 	sf::IpAddress	IP;
 	unsigned short  Port;
+	bool			Connected = true;
 };
 
 sf::Packet& operator<<(sf::Packet& packet, const PlayerInfo& s);
