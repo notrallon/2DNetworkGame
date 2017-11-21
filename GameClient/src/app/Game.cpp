@@ -102,7 +102,7 @@ void Game::Update()
 {
 	static sf::Clock clock;
 	static float elapsed = 0;
-	static float tickrate = 1.0f / 60.0f;
+	static float tickrate = 1.0f / 120.0f;
 	sf::Time time;
 	float dt;
 
@@ -154,7 +154,6 @@ void Game::Send()
 	switch (status)
 	{
 	case sf::Socket::Done:
-		std::cout << "Socket sent successfully!" << std::endl;
 		break;
 	case sf::Socket::NotReady:
 		std::cout << "Socket NotReady!" << std::endl;
@@ -183,10 +182,7 @@ void Game::Recieve()
 	sf::Time time = clock.restart();
 	sf::Socket::Status recieveStatus;
 	recieveStatus = sf::Socket::NotReady;
-	while (recieveStatus != sf::Socket::Done && clock.getElapsedTime().asSeconds() < 0.016f)
-	{
-		recieveStatus = m_Socket.receive(recievePak, recieveIP, recievePort);
-	}
+	recieveStatus = m_Socket.receive(recievePak, recieveIP, recievePort);
 	m_Socket.setBlocking(true);
 
 	PlayerInfo recieveInfo;
@@ -272,11 +268,11 @@ void Game::CreateClientPlayer()
 
 sf::Packet & operator<<(sf::Packet& packet, const PlayerInfo& s)
 {
-	return packet << s.ID << s.Position.x << s.Position.y << s.Speed << s.IP.toString() << s.Port << s.Connected;
+	return packet << s.ID << s.Position.x << s.Position.y << s.Direction.x << s.Direction.y << s.Speed << s.IP.toString() << s.Port << s.Connected;
 }
 
 
 sf::Packet & operator>>(sf::Packet& packet, PlayerInfo& s)
 {
-	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected;
+	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Direction.x >> s.Direction.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected;
 }

@@ -7,10 +7,12 @@ struct PlayerInfo
 {
 	unsigned int	ID;
 	sf::Vector2f	Position;
+	sf::Vector2f	Direction;
 	float			Speed;
 	sf::IpAddress	IP;
 	unsigned short  Port;
 	bool			Connected = true;
+	sf::Time		LastPing;
 };
 
 sf::Packet& operator<<(sf::Packet& packet, const PlayerInfo& s);
@@ -28,6 +30,11 @@ public:
 
 private:
 	using PlayerMap = std::map<unsigned int, PlayerInfo*>;
+
+	void			DisconnectPlayer(PlayerInfo& info);
+	void			UpdatePlayerInfo(PlayerInfo& info, PlayerInfo* player);
+	PlayerInfo*		CreateNewPlayer(unsigned int ID, PlayerInfo& info);
+	void			SendUpdateToClients();
 
 	bool			m_Running;
 	sf::UdpSocket	m_Socket;

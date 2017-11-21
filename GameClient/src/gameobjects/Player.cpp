@@ -41,24 +41,31 @@ void Player::Update(const float& dt)
 	m_PlayerInfo.Position = m_Sprite.getPosition();
 	if (!m_ClientOwned) return;
 
+	sf::Vector2f dir = sf::Vector2f(0.0f, 0.0f);
+
 	if (m_Context->window->hasFocus())
 	{
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
 		{
 			m_Sprite.move(sf::Vector2f(-m_Speed * dt, 0));
+			dir += sf::Vector2f(-1, 0);
 		}
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
 		{
 			m_Sprite.move(sf::Vector2f(m_Speed * dt, 0));
+			dir += sf::Vector2f(1, 0);
 		}
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
 		{
 			m_Sprite.move(sf::Vector2f(0, -m_Speed * dt));
+			dir += sf::Vector2f(0, -1);
 		}
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
 		{
 			m_Sprite.move(sf::Vector2f(0, m_Speed * dt));
+			dir += sf::Vector2f(0, 1);
 		}
+
 
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !m_MousePressed)
 		{
@@ -69,7 +76,7 @@ void Player::Update(const float& dt)
 			m_MousePressed = false;
 		}
 	}
-
+	m_PlayerInfo.Direction = dir;
 }
 
 const PlayerInfo& Player::GetPlayerInfo() const
