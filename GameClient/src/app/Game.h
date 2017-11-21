@@ -30,6 +30,7 @@ class Game
 {
 public:
 	Game();
+	Game(int argc, char* argv[]);
 	~Game();
 
 	void						Run();
@@ -53,6 +54,7 @@ private:
 	ObjectMap					m_GameObjects;
 
 	sf::UdpSocket				m_Socket;
+	sf::IpAddress				m_ServerIP;
 
 	SharedContext*				m_Context;
 };

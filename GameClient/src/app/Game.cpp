@@ -3,13 +3,20 @@
 #include "gameobjects/Player.h"
 #include "app/SharedContext.h"
 
-#define SERVER_IP "10.96.108.50"
-
 Game::Game() : m_Window(nullptr), m_Context(nullptr)
 {
 	Init();
 }
 
+Game::Game(int argc, char * argv[]) : m_Window(nullptr), m_Context(nullptr)
+{
+	if (argc >= 2)
+	{
+		// Treat arg 2 as IP-address
+		m_ServerIP = argv[1];
+	}
+	Init();
+}
 
 Game::~Game()
 {
@@ -58,7 +65,7 @@ void Game::Run()
 				m_Player->SetPlayerInfo(info);
 				sf::Packet packet;
 				packet << info;
-				m_Socket.send(packet, SERVER_IP, 55002);
+				m_Socket.send(packet, m_ServerIP, 55002);
 
 				m_Window->close();
 			}
@@ -149,7 +156,7 @@ void Game::Send()
 	info.Port = m_Socket.getLocalPort();
 	packet << info;
 
-	sf::Socket::Status status = m_Socket.send(packet, SERVER_IP, 55002);
+	sf::Socket::Status status = m_Socket.send(packet, m_ServerIP, 55002);
 
 	switch (status)
 	{
