@@ -13,7 +13,6 @@ GameServer::~GameServer()
 void GameServer::InitServer()
 {
 	m_Socket.bind(55002);
-	m_Socket.setBlocking(false);
 }
 
 void GameServer::RunServer()
@@ -25,21 +24,22 @@ void GameServer::RunServer()
 	static sf::Clock clock;
 	sf::Time time;
 	float elapsed = 0; // for tick rate
-	float frametime = 1 / 60;
-	m_Socket.setBlocking(true);
+
+	// Tickrate
+	float tickrate = 1.0f / 60.0f;
 
 	clock.restart();
 	while (m_Running)
 	{
-		time = clock.restart();
-		float dt = time.asSeconds();
-		elapsed += dt;
+		time =		clock.restart();
+		float dt =	time.asSeconds();
+		elapsed +=	dt;
 
-		sf::Packet recievepacket;
-		sf::IpAddress sender;
-		unsigned short port;
+		// Receive holders
+		sf::Packet		recievepacket;
+		sf::IpAddress	sender;
+		unsigned short	port;
 		// Receive packets
-
 		m_Socket.setBlocking(false);
 		sf::Socket::Status socketStatus = m_Socket.receive(recievepacket, sender, port);
 		m_Socket.setBlocking(true);
@@ -89,10 +89,10 @@ void GameServer::RunServer()
 		UpdatePlayerInfo(info, player);
 
 		// Send message to clients x times per second
-		if (elapsed > frametime)
+		if (elapsed > tickrate)
 		{
 			SendUpdateToClients();
-			elapsed -= frametime;
+			elapsed -= tickrate;
 		}
 	}
 }

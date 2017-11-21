@@ -44,16 +44,16 @@ void Game::Run()
 	m_Context->game = this;
 	m_Context->window = m_Window;
 
-	static sf::Clock clock;
-	sf::Time time;
-	float elapsed = 0;
-	float tickrate = 1.0f / 60.0f;
+	//static sf::Clock clock;
+	//sf::Time time;
+	//float elapsed = 0;
+	//float tickrate = 1.0f / 60.0f;
 
 	while (m_Window->isOpen())
 	{
-		time = clock.restart();
-		float dt = time.asSeconds();
-		elapsed += dt;
+		//time = clock.restart();
+		//float dt = time.asSeconds();
+		//elapsed += dt;
 
 		sf::Event evnt;
 		while (m_Window->pollEvent(evnt))
@@ -109,7 +109,7 @@ void Game::Update()
 {
 	static sf::Clock clock;
 	static float elapsed = 0;
-	static float tickrate = 1.0f / 120.0f;
+	static float tickrate = 1.0f / 60.0f;
 	sf::Time time;
 	float dt;
 
@@ -117,13 +117,13 @@ void Game::Update()
 	dt = time.asSeconds();
 	elapsed += dt;
 
-	// Send Updates
+	// Send Updates to server
 	if (elapsed > tickrate)
 	{
 		Send();
 		elapsed -= tickrate;
 	}
-	// Recieve packets
+	// Recieve packets from server
 	Recieve();
 
 
