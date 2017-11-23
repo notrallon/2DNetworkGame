@@ -5,8 +5,8 @@
 
 #include <shared-structs.h>
 
-sf::Packet& operator<<(sf::Packet& packet, const PlayerInfo& s);
-sf::Packet& operator>>(sf::Packet& packet, PlayerInfo& s);
+sf::Packet& operator<<(sf::Packet& packet, const ObjectInfo& s);
+sf::Packet& operator>>(sf::Packet& packet, ObjectInfo& s);
 
 class GameServer
 {
@@ -19,11 +19,11 @@ public:
 
 
 private:
-	using PlayerMap = std::map<unsigned int, PlayerInfo*>;
+	using PlayerMap = std::map<unsigned int, ObjectInfo*>;
 
-	void			DisconnectPlayer(PlayerInfo& info);
-	void			UpdatePlayerInfo(PlayerInfo& info, PlayerInfo* player);
-	PlayerInfo*		CreateNewPlayer(unsigned int ID, PlayerInfo& info);
+	void			DisconnectPlayer(ObjectInfo& info);
+	void			UpdatePlayerInfo(ObjectInfo& info, ObjectInfo* player);
+	ObjectInfo*		CreateNewPlayer(unsigned int ID, ObjectInfo& info);
 	void			SendUpdateToClients();
 
 	bool			m_Running;

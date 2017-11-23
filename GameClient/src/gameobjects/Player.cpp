@@ -14,13 +14,14 @@ Player::Player() : m_MousePressed(false)
 
 Player::Player(SharedContext * context, bool owned) : GameObject::GameObject(context), m_ClientOwned(owned)
 {
-	
 	m_Sprite.setSize(sf::Vector2f(40, 80));
 	m_Sprite.setOrigin(m_Sprite.getSize().x / 2, m_Sprite.getSize().y / 4);
+
 	if(playerCount > 0)
-	m_Sprite.setFillColor(sf::Color::Blue);
+		m_Sprite.setFillColor(sf::Color::Blue);
 	else
-	m_Sprite.setFillColor(sf::Color::Red);
+		m_Sprite.setFillColor(sf::Color::Red);
+
 	m_Speed = 300;
 	m_PlayerInfo.IP = sf::IpAddress::getLocalAddress();
 	m_PlayerInfo.Speed = m_Speed;
@@ -79,12 +80,12 @@ void Player::Update(const float& dt)
 	m_PlayerInfo.Direction = dir;
 }
 
-const PlayerInfo& Player::GetPlayerInfo() const
+const ObjectInfo& Player::GetPlayerInfo() const
 {
 	return m_PlayerInfo;
 }
 
-void Player::SetPlayerInfo(PlayerInfo info)
+void Player::SetPlayerInfo(ObjectInfo info)
 {
 	m_PlayerInfo = info;
 	m_Sprite.setPosition(m_PlayerInfo.Position);

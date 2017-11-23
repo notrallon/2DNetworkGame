@@ -1,5 +1,7 @@
 #include "Game.h"
 #include <iostream>
+#include <thread>
+#include <chrono>
 #include "gameobjects/Player.h"
 #include "app/SharedContext.h"
 
@@ -49,8 +51,11 @@ void Game::Run()
 	//float elapsed = 0;
 	//float tickrate = 1.0f / 60.0f;
 
+	const float framerate = 1.0f / 60.0f;
+
 	while (m_Window->isOpen())
 	{
+		// time = clock.getElapsedTime();
 		//time = clock.restart();
 		//float dt = time.asSeconds();
 		//elapsed += dt;
@@ -60,7 +65,7 @@ void Game::Run()
 		{
 			if (evnt.type == sf::Event::Closed)
 			{
-				PlayerInfo info = m_Player->GetPlayerInfo();
+				ObjectInfo info = m_Player->GetPlayerInfo();
 				info.Connected = false;
 				m_Player->SetPlayerInfo(info);
 				sf::Packet packet;
@@ -76,7 +81,14 @@ void Game::Run()
 		// Draw
 		Draw();
 
-		
+		/* TODO: Breaks net-update, fix to not race for CPU
+		sf::Time t2 = clock.getElapsedTime();
+		while (t2.asMilliseconds() < (time.asMilliseconds() + 16))
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			t2 = clock.getElapsedTime();
+		}
+		*/
 
 		// Add packets to gameobjects if they don't exist
 		// Update all gameobjects
@@ -96,12 +108,10 @@ void Game::Init()
 	m_Context = new SharedContext();
 
 	//m_Player = new Player(m_Context, true);
-
 	
 	CreateClientPlayer();
 	// Recieve a message that updates the player info.
 	//Recieve();
-
 
 }
 
@@ -152,7 +162,7 @@ void Game::Draw()
 void Game::Send()
 {
 	sf::Packet packet;
-	PlayerInfo info = m_Player->GetPlayerInfo();
+	ObjectInfo info = m_Player->GetPlayerInfo();
 	info.Port = m_Socket.getLocalPort();
 	packet << info;
 
@@ -192,7 +202,7 @@ void Game::Recieve()
 	recieveStatus = m_Socket.receive(recievePak, recieveIP, recievePort);
 	m_Socket.setBlocking(true);
 
-	PlayerInfo recieveInfo;
+	ObjectInfo recieveInfo;
 	recievePak >> recieveInfo;
 
 	switch (recieveStatus)
@@ -250,7 +260,7 @@ void Game::CreateClientPlayer()
 	}
 
 	m_Socket.setBlocking(true);
-	PlayerInfo recieveInfo;
+	ObjectInfo recieveInfo;
 	recievePak >> recieveInfo;
 
 	switch (recieveStatus)
@@ -273,13 +283,13 @@ void Game::CreateClientPlayer()
 }
 
 
-sf::Packet & operator<<(sf::Packet& packet, const PlayerInfo& s)
+sf::Packet & operator<<(sf::Packet& packet, const ObjectInfo& s)
 {
 	return packet << s.ID << s.Position.x << s.Position.y << s.Direction.x << s.Direction.y << s.Speed << s.IP.toString() << s.Port << s.Connected;
 }
 
 
-sf::Packet & operator>>(sf::Packet& packet, PlayerInfo& s)
+sf::Packet & operator>>(sf::Packet& packet, ObjectInfo& s)
 {
 	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Direction.x >> s.Direction.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected;
 }

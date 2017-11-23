@@ -22,8 +22,8 @@ public:
 
 	void						AddObject(GameObject* object);
 
-	friend sf::Packet& operator<<(sf::Packet& packet, const PlayerInfo& s);
-	friend sf::Packet& operator>>(sf::Packet& packet, PlayerInfo& s);
+	friend sf::Packet& operator<<(sf::Packet& packet, const ObjectInfo& s);
+	friend sf::Packet& operator>>(sf::Packet& packet, ObjectInfo& s);
 private:
 	using ObjectMap = std::map<unsigned int, GameObject*>;
 	void						Init();

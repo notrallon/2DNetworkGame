@@ -45,7 +45,7 @@ void GameServer::RunServer()
 		m_Socket.setBlocking(true);
 		// Set default id to max unsigned int value
 		unsigned int ID = UINT_MAX;
-		PlayerInfo info;
+		ObjectInfo info;
 		switch (socketStatus)
 		{
 		case sf::Socket::Done:
@@ -63,7 +63,7 @@ void GameServer::RunServer()
 			break;
 		}
 
-		PlayerInfo* player;
+		ObjectInfo* player;
 		
 		if (m_Players.find(info.ID) == m_Players.end() && ID == 0)
 		{
@@ -97,7 +97,7 @@ void GameServer::RunServer()
 	}
 }
 
-void GameServer::DisconnectPlayer(PlayerInfo & info)
+void GameServer::DisconnectPlayer(ObjectInfo & info)
 {
 	for (PlayerMap::iterator it = m_Players.begin(); it != m_Players.end(); it++)
 	{
@@ -107,7 +107,7 @@ void GameServer::DisconnectPlayer(PlayerInfo & info)
 		sf::Packet sendpacket;
 		sendpacket << info;
 		// Grab a player to send info to
-		PlayerInfo* playerToSend = it->second;
+		ObjectInfo* playerToSend = it->second;
 
 		m_Socket.send(sendpacket, playerToSend->IP, playerToSend->Port);
 	}
@@ -115,7 +115,7 @@ void GameServer::DisconnectPlayer(PlayerInfo & info)
 	m_Players.find(info.ID)->second = nullptr;
 }
 
-void GameServer::UpdatePlayerInfo(PlayerInfo & info, PlayerInfo* player)
+void GameServer::UpdatePlayerInfo(ObjectInfo & info, ObjectInfo* player)
 {
 	if (player == nullptr) { return; }
 	static sf::Clock runningClock;
@@ -141,9 +141,9 @@ void GameServer::UpdatePlayerInfo(PlayerInfo & info, PlayerInfo* player)
 	}
 }
 
-PlayerInfo * GameServer::CreateNewPlayer(unsigned int ID, PlayerInfo& info)
+ObjectInfo * GameServer::CreateNewPlayer(unsigned int ID, ObjectInfo& info)
 {
-	PlayerInfo* player = new PlayerInfo();
+	ObjectInfo* player = new ObjectInfo();
 	*player = info;
 	player->ID = ID;
 	player->IP = info.IP;
@@ -168,7 +168,7 @@ void GameServer::SendUpdateToClients()
 		if (it->second == nullptr)
 			continue;
 		// Grab a player to send info to
-		PlayerInfo* playerToSend = it->second;
+		ObjectInfo* playerToSend = it->second;
 
 		// Loop through all players and send the info to the recieving player.
 		for (PlayerMap::iterator it2 = m_Players.begin(); it2 != m_Players.end(); it2++)
@@ -177,20 +177,20 @@ void GameServer::SendUpdateToClients()
 			if (it2->second == nullptr)
 				continue;
 
-			PlayerInfo* pakInfo = it2->second;
+			ObjectInfo* pakInfo = it2->second;
 			sendpacket << *pakInfo;
 			m_Socket.send(sendpacket, playerToSend->IP, playerToSend->Port);
 		}
 	}
 }
 
-sf::Packet & operator<<(sf::Packet & packet, const PlayerInfo & s)
+sf::Packet & operator<<(sf::Packet & packet, const ObjectInfo & s)
 {
 	return packet << s.ID << s.Position.x << s.Position.y << s.Direction.x << s.Direction.y << s.Speed << s.IP.toString() << s.Port << s.Connected;
 }
 
 
-sf::Packet & operator>>(sf::Packet & packet, PlayerInfo & s)
+sf::Packet & operator>>(sf::Packet & packet, ObjectInfo & s)
 {
 	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Direction.x >> s.Direction.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected;
 }

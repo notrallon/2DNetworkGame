@@ -16,15 +16,15 @@ public:
 	virtual void				Draw(sf::RenderWindow& window) override;
 	virtual void				Update(const float& dt) override;
 
-	const PlayerInfo&			GetPlayerInfo() const;
-	void						SetPlayerInfo(PlayerInfo info);
+	const ObjectInfo&			GetPlayerInfo() const;
+	void						SetPlayerInfo(ObjectInfo info);
 
 private:
 	//static int					playerCount;
 
 	void						Shoot();
 
-	PlayerInfo					m_PlayerInfo;
+	ObjectInfo					m_PlayerInfo;
 	sf::RectangleShape			m_Sprite;
 	unsigned short				m_Speed;
 	bool						m_MousePressed;
