@@ -2,9 +2,9 @@
 
 #include "app/GameServer.h"
 
-int main()
+int main(int argc, char* argv[])
 {
-	GameServer server;
+	GameServer server(argc, argv);
 
 	server.RunServer();
 

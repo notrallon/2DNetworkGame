@@ -44,6 +44,7 @@ private:
 
 	sf::UdpSocket				m_Socket;
 	sf::IpAddress				m_ServerIP;
+	unsigned short				m_ServerPort;
 
 	SharedContext*				m_Context;
 };

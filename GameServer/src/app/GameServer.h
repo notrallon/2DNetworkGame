@@ -12,6 +12,7 @@ class GameServer
 {
 public:
 	GameServer();
+	GameServer(int argc, char* argv[]);
 	~GameServer();
 
 	void InitServer();
@@ -31,4 +32,5 @@ private:
 	bool			m_Running;
 	sf::UdpSocket	m_Socket;
 	PlayerMap		m_Players;
+	unsigned short	m_Port;
 };

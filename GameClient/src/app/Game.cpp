@@ -15,10 +15,21 @@ Game::Game() : m_Window(nullptr), m_Context(nullptr)
 
 Game::Game(int argc, char * argv[]) : m_Window(nullptr), m_Context(nullptr)
 {
-	if (argc >= 2)
+	if (argc == 2)
 	{
 		// Treat arg 2 as IP-address
 		m_ServerIP = argv[1];
+		std::cout << "ServerIP: " << m_ServerIP << std::endl;
+
+	}
+	else if (argc >= 3)
+	{
+		// Treat arg 2 as IP-address
+		m_ServerIP = argv[1];
+		std::cout << "ServerIP: " << m_ServerIP << std::endl;
+		// Treat arg 3 as Port
+		m_ServerPort = std::atoi(argv[2]);
+		std::cout << "ServerPort: " << m_ServerPort << std::endl;
 	}
 	Init();
 }
@@ -111,7 +122,7 @@ void Game::Init()
 {
 	m_Socket.bind(sf::Socket::AnyPort);
 	m_Socket.setBlocking(true);
-	m_Window = new sf::RenderWindow(sf::VideoMode(800, 600), "LAN Shooter Game");
+	m_Window = new sf::RenderWindow(sf::VideoMode(1600, 900), "LAN Shooter Game");
 	m_Context = new SharedContext();
 
 	//m_Player = new Player(m_Context, true);
@@ -180,7 +191,7 @@ void Game::Send()
 	info.Port = m_Socket.getLocalPort();
 	packet << info;
 
-	sf::Socket::Status status = m_Socket.send(packet, m_ServerIP, 55002);
+	sf::Socket::Status status = m_Socket.send(packet, m_ServerIP, m_ServerPort);
 
 	switch (status)
 	{
@@ -310,7 +321,7 @@ void Game::Disconnect()
 	m_Player->SetObjectInfo(info);
 	sf::Packet packet;
 	packet << info;
-	m_Socket.send(packet, m_ServerIP, 55002);
+	m_Socket.send(packet, m_ServerIP, m_ServerPort);
 }
 
 sf::Packet & operator<<(sf::Packet& packet, const ObjectInfo& s)

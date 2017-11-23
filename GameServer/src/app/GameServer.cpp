@@ -8,13 +8,37 @@ GameServer::GameServer()
 	InitServer();
 }
 
+GameServer::GameServer(int argc, char * argv[])
+{
+	if (argc >= 2)
+	{
+		// Treat arg 2 as IP-address
+		m_Port = std::atoi(argv[1]);
+	}
+	InitServer();
+}
+
 GameServer::~GameServer()
 {
 }
 
 void GameServer::InitServer()
 {
-	m_Socket.bind(55002);
+	std::cout << "Local IP-adress: "	<<	sf::IpAddress::getLocalAddress()	<< std::endl;
+	std::cout << "Public IP-adress: "	<<	sf::IpAddress::getPublicAddress()	<< std::endl;
+
+	if (m_Port > 5 && m_Port < 70000)
+	{
+		m_Socket.bind(m_Port);
+		std::cout << "Port: " << m_Port << std::endl;
+	}
+	else
+	{
+		m_Socket.bind(55002);
+		std::cout << "Port: " << "55002" << std::endl;
+	}
+
+	
 }
 
 void GameServer::RunServer()
@@ -239,14 +263,14 @@ void GameServer::UpdateObjects(const float & dt)
 			}
 
 			//out of bounds x
-			if (obj->Position.x > 400 || obj->Position.x < 0)
+			if (obj->Position.x > 2000 || obj->Position.x < -2000)
 			{
 				obj->Connected = false;
 				//it++;
 				continue;
 			}
 			//out of bounds y
-			else if (obj->Position.y > 400 || obj->Position.y < 0)
+			else if (obj->Position.y > 2000 || obj->Position.y < -2000)
 			{
 				obj->Connected = false;
 				//it++;
