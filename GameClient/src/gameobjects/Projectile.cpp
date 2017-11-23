@@ -10,7 +10,7 @@ Projectile::Projectile(const sf::Vector2f& startpos, const sf::Vector2f& directi
 	m_Sprite.setRadius(6);
 	m_Sprite.setOrigin(3, 3);
 	m_Sprite.setFillColor(sf::Color::Green);
-	m_Speed = 750;
+	m_Speed = 100;
 }
 
 Projectile::~Projectile()
@@ -25,4 +25,10 @@ void Projectile::Update(const float& dt)
 void Projectile::Draw(sf::RenderWindow& window)
 {
 	window.draw(m_Sprite);
+}
+
+void Projectile::SetObjectInfo(ObjectInfo info)
+{
+	GameObject::SetObjectInfo(info);
+	m_Sprite.setPosition(info.Position);
 }

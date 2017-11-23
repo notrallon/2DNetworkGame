@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gameobjects/GameObject.h>
+#include "GameObject.h"
 
 class Projectile : public GameObject
 {
@@ -11,6 +11,8 @@ public:
 
 	virtual void Update(const float& dt) override;
 	virtual void Draw(sf::RenderWindow& window) override;
+
+	void						SetObjectInfo(ObjectInfo info) override;
 
 private:
 	sf::CircleShape m_Sprite;

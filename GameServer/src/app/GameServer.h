@@ -24,6 +24,8 @@ private:
 	void			DisconnectPlayer(ObjectInfo& info);
 	void			UpdatePlayerInfo(ObjectInfo& info, ObjectInfo* player);
 	ObjectInfo*		CreateNewPlayer(unsigned int ID, ObjectInfo& info);
+	void			SpawnProjectile(ObjectInfo& info, unsigned int& ID);
+	void			UpdateObjects(const float& dt);
 	void			SendUpdateToClients();
 
 	bool			m_Running;

@@ -1,20 +1,8 @@
 #pragma once
 
-enum class SocketTypes 
-{
-	Null,
-	Player,
-	Disconnect,
-	Projectile,
-	OutOfBounds
-};
 
-enum class ObjectTypes
-{
-	Null,
-	Player,
-	Projectile
-};
+
+
 
 struct ObjectInfo
 {
@@ -27,9 +15,17 @@ struct ObjectInfo
 	bool			Connected = true;
 	sf::Time		LastPing;
 
-	bool			Shooting;
+	bool			Shooting = false;
 	sf::Vector2f	MousePosition;
 
-	ObjectTypes		ObjectType;
-	SocketTypes		PacketType;
+	enum ObjectTypes
+	{
+		Null,
+		Player,
+		Projectile,
+		OutOfBounds
+	};
+
+	int ObjectType;
+	int SocketType;
 };

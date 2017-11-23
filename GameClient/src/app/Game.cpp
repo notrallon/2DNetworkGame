@@ -3,7 +3,10 @@
 #include <thread>
 #include <chrono>
 #include "gameobjects/Player.h"
+#include "gameobjects/Projectile.h"
 #include "app/SharedContext.h"
+
+sf::RectangleShape Game::groundFloor;
 
 Game::Game() : m_Window(nullptr), m_Context(nullptr)
 {
@@ -25,7 +28,7 @@ Game::~Game()
 	// Send a packet to the server where info says the player is no longer
 	// connected.
 
-
+	Disconnect();
 
 	for (auto it : m_GameObjects)
 	{
@@ -39,40 +42,43 @@ Game::~Game()
 
 	delete m_Window;
 	m_Window = nullptr;
+
+
 }
 
-void Game::Run()
+int Game::Run()
 {
 	m_Context->game = this;
 	m_Context->window = m_Window;
 
-	//static sf::Clock clock;
-	//sf::Time time;
-	//float elapsed = 0;
-	//float tickrate = 1.0f / 60.0f;
+	//m_Window->setFramerateLimit(200);
 
-	const float framerate = 1.0f / 60.0f;
+	static sf::Clock clock;
+	sf::Time time;
+	float elapsed = 0;
+	const float TICKRATE = 1000.0f / 300.0f;
 
 	while (m_Window->isOpen())
 	{
-		// time = clock.getElapsedTime();
-		//time = clock.restart();
-		//float dt = time.asSeconds();
-		//elapsed += dt;
+		//time = clock.getElapsedTime();
+		time = clock.restart();
+		float dt = time.asSeconds();
+		elapsed += dt;
 
 		sf::Event evnt;
 		while (m_Window->pollEvent(evnt))
 		{
 			if (evnt.type == sf::Event::Closed)
 			{
-				ObjectInfo info = m_Player->GetPlayerInfo();
-				info.Connected = false;
-				m_Player->SetPlayerInfo(info);
-				sf::Packet packet;
-				packet << info;
-				m_Socket.send(packet, m_ServerIP, 55002);
+				
 
 				m_Window->close();
+			}
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Return))
+			{
+				m_Window->close();
+				return 1;
 			}
 		}
 
@@ -81,18 +87,19 @@ void Game::Run()
 		// Draw
 		Draw();
 
-		/* TODO: Breaks net-update, fix to not race for CPU
-		sf::Time t2 = clock.getElapsedTime();
-		while (t2.asMilliseconds() < (time.asMilliseconds() + 16))
+		// TODO: Breaks net-update, fix to not race for CPU
+		/*sf::Time t2 = clock.getElapsedTime();
+		while (t2.asMilliseconds() < TICKRATE)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			std::this_thread::sleep_for(std::chrono::milliseconds(long long(TICKRATE - t2.asMilliseconds())));
 			t2 = clock.getElapsedTime();
-		}
-		*/
+		}*/
 
 		// Add packets to gameobjects if they don't exist
 		// Update all gameobjects
 	}
+
+	return 0;
 }
 
 void Game::AddObject(GameObject* object)
@@ -119,7 +126,7 @@ void Game::Update()
 {
 	static sf::Clock clock;
 	static float elapsed = 0;
-	static float tickrate = 1.0f / 60.0f;
+	const static float TICKRATE = 1.0f / 60.0f;
 	sf::Time time;
 	float dt;
 
@@ -128,14 +135,20 @@ void Game::Update()
 	elapsed += dt;
 
 	// Send Updates to server
-	if (elapsed > tickrate)
+	if (elapsed > TICKRATE)
 	{
 		Send();
-		elapsed -= tickrate;
+		elapsed -= TICKRATE;
 	}
 	// Recieve packets from server
 	Recieve();
 
+	//Temp Code
+	
+	groundFloor.setSize(sf::Vector2f(800, 100));
+	groundFloor.setPosition(0, 500);
+	groundFloor.setFillColor(sf::Color::Green);
+	
 
 	for (ObjectMap::iterator it = m_GameObjects.begin(); it != m_GameObjects.end(); it++)
 	{
@@ -155,6 +168,7 @@ void Game::Draw()
 	{
 		it->second->Draw(*m_Window);
 	}
+	m_Window->draw(groundFloor);
 
 	m_Window->display();
 }
@@ -162,7 +176,7 @@ void Game::Draw()
 void Game::Send()
 {
 	sf::Packet packet;
-	ObjectInfo info = m_Player->GetPlayerInfo();
+	ObjectInfo info = m_Player->GetObjectInfo();
 	info.Port = m_Socket.getLocalPort();
 	packet << info;
 
@@ -195,8 +209,6 @@ void Game::Recieve()
 	sf::IpAddress recieveIP;
 	unsigned short recievePort;
 	m_Socket.setBlocking(false);
-	sf::Clock clock;
-	sf::Time time = clock.restart();
 	sf::Socket::Status recieveStatus;
 	recieveStatus = sf::Socket::NotReady;
 	recieveStatus = m_Socket.receive(recievePak, recieveIP, recievePort);
@@ -208,18 +220,27 @@ void Game::Recieve()
 	switch (recieveStatus)
 	{
 	case sf::Socket::Done: {
-		Player* player;
+		GameObject* object;
 		if (m_GameObjects.find(recieveInfo.ID) == m_GameObjects.end())
 		{
-			player = new Player(m_Context, false);
-			player->SetPlayerInfo(recieveInfo);
-			m_GameObjects.emplace(recieveInfo.ID, player);
+			if (recieveInfo.ObjectType == ObjectInfo::ObjectTypes::Player)
+			{
+				object = static_cast<Player*>(new Player(m_Context, false));
+				object->SetObjectInfo(recieveInfo);
+				m_GameObjects.emplace(recieveInfo.ID, object);
+			}
+			else if (recieveInfo.ObjectType == ObjectInfo::ObjectTypes::Projectile)
+			{
+				object = static_cast<Projectile*>(new Projectile(recieveInfo.Position, recieveInfo.Direction));
+				object->SetObjectInfo(recieveInfo);
+				m_GameObjects.emplace(recieveInfo.ID, object);
+			}
 		}
 		// Get an already existing player
-		Player* object = static_cast<Player*>(m_GameObjects.find(recieveInfo.ID)->second);
+		object = m_GameObjects.find(recieveInfo.ID)->second;
 		
 		// Update the players info.
-		object->SetPlayerInfo(recieveInfo);
+		object->SetObjectInfo(recieveInfo);
 		
 		// If another player disconnected.
 		if (!recieveInfo.Connected)
@@ -266,8 +287,8 @@ void Game::CreateClientPlayer()
 	switch (recieveStatus)
 	{
 	case sf::Socket::Done: 
-		m_Player->SetPlayerInfo(recieveInfo);
-		m_GameObjects.emplace(m_Player->GetPlayerInfo().ID, m_Player);
+		m_Player->SetObjectInfo(recieveInfo);
+		m_GameObjects.emplace(m_Player->GetObjectInfo().ID, m_Player);
 		break;
 	case sf::Socket::NotReady:
 		break;
@@ -282,14 +303,22 @@ void Game::CreateClientPlayer()
 	}
 }
 
+void Game::Disconnect()
+{
+	ObjectInfo info = m_Player->GetObjectInfo();
+	info.Connected = false;
+	m_Player->SetObjectInfo(info);
+	sf::Packet packet;
+	packet << info;
+	m_Socket.send(packet, m_ServerIP, 55002);
+}
 
 sf::Packet & operator<<(sf::Packet& packet, const ObjectInfo& s)
 {
-	return packet << s.ID << s.Position.x << s.Position.y << s.Direction.x << s.Direction.y << s.Speed << s.IP.toString() << s.Port << s.Connected;
+	return packet << s.ID << s.Position.x << s.Position.y << s.Direction.x << s.Direction.y << s.Speed << s.IP.toString() << s.Port << s.Connected << s.Shooting << s.MousePosition.x << s.MousePosition.y << s.ObjectType << s.SocketType;
 }
-
 
 sf::Packet & operator>>(sf::Packet& packet, ObjectInfo& s)
 {
-	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Direction.x >> s.Direction.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected;
+	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Direction.x >> s.Direction.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected >> s.ObjectType;
 }

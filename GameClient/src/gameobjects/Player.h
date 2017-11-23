@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GameObject.h"
-#include <app/Game.h>
 
 #include <vector>
 
@@ -16,15 +15,12 @@ public:
 	virtual void				Draw(sf::RenderWindow& window) override;
 	virtual void				Update(const float& dt) override;
 
-	const ObjectInfo&			GetPlayerInfo() const;
-	void						SetPlayerInfo(ObjectInfo info);
+	const ObjectInfo&			GetObjectInfo() const override;
+	void						SetObjectInfo(ObjectInfo info) override;
 
 private:
-	//static int					playerCount;
-
 	void						Shoot();
 
-	ObjectInfo					m_PlayerInfo;
 	sf::RectangleShape			m_Sprite;
 	unsigned short				m_Speed;
 	bool						m_MousePressed;

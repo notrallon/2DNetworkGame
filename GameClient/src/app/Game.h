@@ -18,7 +18,10 @@ public:
 	Game(int argc, char* argv[]);
 	~Game();
 
-	void						Run();
+	//TODO: Temp
+	static sf::RectangleShape groundFloor;
+
+	int							Run();
 
 	void						AddObject(GameObject* object);
 
@@ -33,6 +36,7 @@ private:
 	void						Send();
 	void						Recieve();
 	void						CreateClientPlayer();
+	void						Disconnect();
 
 	sf::RenderWindow*			m_Window;
 	Player*						m_Player;
