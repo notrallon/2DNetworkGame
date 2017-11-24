@@ -1,5 +1,7 @@
 #include "Projectile.h"
 
+#include <iostream>
+
 Projectile::Projectile()
 {
 }
@@ -10,7 +12,7 @@ Projectile::Projectile(const sf::Vector2f& startpos, const sf::Vector2f& directi
 	m_Sprite.setRadius(6);
 	m_Sprite.setOrigin(3, 3);
 	m_Sprite.setFillColor(sf::Color::Green);
-	m_Speed = 100;
+	m_Speed = 1000;
 }
 
 Projectile::~Projectile()

@@ -10,7 +10,6 @@ GameObject::GameObject(SharedContext * context) : m_Context(context)
 {
 }
 
-
 GameObject::~GameObject()
 {
 }

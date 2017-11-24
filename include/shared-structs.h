@@ -1,12 +1,10 @@
 #pragma once
 
-
-
-
+//Automatically optimzes struct size
 #pragma pack(push, 1)
-struct ObjectInfo
+struct ObjectInfo								// 68 (total size)
 {
-	enum ObjectTypes							// 4
+	enum ObjectTypes							// 4 (does not increase size)
 	{
 		Null,
 		Player,
@@ -14,6 +12,7 @@ struct ObjectInfo
 		OutOfBounds
 	};
 	sf::Vector2f	Position;					// 8
+	sf::Vector2f	Size;						// 8
 	sf::Vector2f	Direction;					// 8
 	sf::IpAddress	IP;							// 8
 	sf::Time		LastPing;					// 8
@@ -28,13 +27,6 @@ struct ObjectInfo
 	unsigned short  Port;						// 2
 	bool			Shooting = false;			// 1
 	bool			Connected = true;			// 1
-
+												// = 68
 };
 #pragma pack(pop)
-
-struct Test
-{
-	bool			Shooting = false;			// 1
-	short kort;
-
-};

@@ -43,13 +43,7 @@ void GameServer::RunServer()
 {
 	m_Running = true;
 
-	std::cout << "sf::Vector2f: " << sizeof(sf::Vector2f) << " bytes\n";
-	std::cout << "sf::IpAdress: " << sizeof(sf::IpAddress) << " bytes\n";
-	std::cout << "bool: " << sizeof(bool) << " bytes\n";
-	std::cout << "sf::Time: " << sizeof(sf::Time) << " bytes\n";
 	std::cout << "ObjectInfo: " << sizeof(ObjectInfo) << " bytes\n";
-	std::cout << "Test: " << sizeof(Test) << " bytes\n";
-	std::cout << "ObjectInfo::Types: " << sizeof(ObjectInfo::ObjectTypes) << " bytes\n";
 
 	static unsigned int IDCounter = 0;
 
@@ -156,8 +150,6 @@ void GameServer::RunServer()
 
 void GameServer::DisconnectPlayer(ObjectInfo & info)
 {
-
-	//TODO: Calling upon disconnect (on client side) causes server to crash. Probably something wrong with client side having no player but still sends info, but server should handle this.
 	ObjectMap::iterator it;
 	for (ObjectMap::iterator it = m_GameObjects.begin(); it != m_GameObjects.end(); it++)
 	{
@@ -204,7 +196,7 @@ void GameServer::UpdatePlayerInfo(ObjectInfo & info, ObjectInfo* player)
 	}
 }
 
-ObjectInfo * GameServer::CreateNewPlayer(unsigned int ID, ObjectInfo& info)
+ObjectInfo* GameServer::CreateNewPlayer(unsigned int ID, ObjectInfo& info)
 {
 	ObjectInfo* player = new ObjectInfo();
 	*player = info;
@@ -213,8 +205,13 @@ ObjectInfo * GameServer::CreateNewPlayer(unsigned int ID, ObjectInfo& info)
 	player->Port = info.Port;
 	player->Speed = 600;
 	player->ObjectType = ObjectInfo::ObjectTypes::Player;
+	player->Size = sf::Vector2f(40, 50);
 	player->LastShot = RUNNING_CLOCK.getElapsedTime();
 	m_GameObjects.emplace(ID, player);
+
+	sf::FloatRect floatRect = sf::FloatRect(player->Position, player->Size);
+
+	m_PlayerAreas.emplace(ID, floatRect);
 
 	// Create a package and send it back to the player as a confirmation
 	// that they successfully connected and make sure they get the correct ID.
@@ -227,18 +224,11 @@ ObjectInfo * GameServer::CreateNewPlayer(unsigned int ID, ObjectInfo& info)
 
 void GameServer::SpawnProjectile(ObjectInfo & info, unsigned int& ID)
 {
-	//ID++;
 	// Find the player that is shooting.
 	ObjectInfo* player = m_GameObjects.find(info.ID)->second;
 
 	// Create a new projectile and add it to our objects.
 	ObjectInfo* projectile = new ObjectInfo();
-	projectile->ObjectType = ObjectInfo::ObjectTypes::Projectile;
-	projectile->Speed = 1000;
-	projectile->Connected = true;
-	projectile->ID = ID;
-	projectile->Position = player->Position;
-	m_GameObjects.emplace(ID, projectile);
 
 	// Get the directional vector to where the player is aiming.
 	sf::Vector2f dir = info.MousePosition - player->Position;
@@ -247,6 +237,17 @@ void GameServer::SpawnProjectile(ObjectInfo & info, unsigned int& ID)
 	dir.y /= dirLength;
 
 	projectile->Direction = dir;
+
+	projectile->ObjectType = ObjectInfo::ObjectTypes::Projectile;
+	projectile->Speed = 1000;
+	projectile->Connected = true;
+	projectile->ID = ID;
+	projectile->Position = sf::Vector2f(player->Position.x + (dir.x * 50), player->Position.y + (dir.y * 60));
+	projectile->Size = sf::Vector2f(12,12);
+	m_GameObjects.emplace(ID, projectile);
+
+	sf::FloatRect floatRect = sf::FloatRect(projectile->Position, projectile->Size);
+	m_BulletAreas.emplace(ID, floatRect);
 }
 
 void GameServer::UpdateObjects(const float & dt)
@@ -257,10 +258,8 @@ void GameServer::UpdateObjects(const float & dt)
 	for (ObjectMap::iterator it = m_GameObjects.begin(); it != m_GameObjects.end(); it++)
 	{
 		if (it->second == nullptr)
-		{
-			//it++;
 			continue;
-		}
+
 		ObjectInfo* obj = it->second;
 
 		// Update server side objects.
@@ -269,23 +268,52 @@ void GameServer::UpdateObjects(const float & dt)
 			destroy.emplace(obj->ID, obj);
 			continue;
 		}
+
+		/// Collision Handling (players getting hit by bullets)
+		// if obj is a player
+		if (obj->ObjectType == ObjectInfo::ObjectTypes::Player)
+		{
+			for (ObjectMap::iterator it2 = m_GameObjects.begin(); it2 != m_GameObjects.end(); it2++)
+			{
+				ObjectInfo* objBullet = it2->second;
+
+				//if objBullet is not a projectile
+				if (objBullet->ObjectType != ObjectInfo::ObjectTypes::Projectile)
+					continue;
+				//if objBullets ID is the same as the first (it) iteration
+				if (objBullet->ID == m_BulletAreas.find(obj->ID)->first)
+					continue;
+				// if player collides with bullet
+				if (m_PlayerAreas.find(obj->ID)->second.intersects(m_BulletAreas.find(objBullet->ID)->second))
+				{
+					std::cout << "Hit!" << std::endl;
+
+					//Add Hitted Player to the "to be destroyed" list
+					destroy.emplace(obj->ID, obj);
+				}
+			}
+		}// Collision handling End.
+
 		if (obj->ObjectType != ObjectInfo::ObjectTypes::Player)
 		{
 			obj->Position += obj->Direction * obj->Speed * dt;
+			sf::FloatRect floatRect = sf::FloatRect(obj->Position, obj->Size);
+
+			
+			//Why this no work?
+			m_BulletAreas.find(obj->ID)->second = floatRect;
 
 
 			//out of bounds x
 			if (obj->Position.x > 2000 || obj->Position.x < -2000)
 			{
 				obj->Connected = false;
-				//it++;
 				continue;
 			}
 			//out of bounds y
 			else if (obj->Position.y > 2000 || obj->Position.y < -2000)
 			{
 				obj->Connected = false;
-				//it++;
 				continue;
 			}
 		}
@@ -293,16 +321,18 @@ void GameServer::UpdateObjects(const float & dt)
 		{
 			long playerDT = RUNNING_CLOCK.getElapsedTime().asMilliseconds() - obj->LastPing.asMilliseconds();
 			obj->Position += obj->Direction * obj->Speed * dt;
+
+			sf::FloatRect floatRect = sf::FloatRect(obj->Position, obj->Size);
+			m_PlayerAreas.find(obj->ID)->second = floatRect;
+
 			if (playerDT > 10000)
-			{
 				obj->Connected = false;
-			}
 		}
-		
 	}
 
 	for (auto it : destroy)
 	{
+		//Also disconnects bullets
 		DisconnectPlayer(*it.second);
 	}
 }
@@ -335,10 +365,10 @@ void GameServer::SendUpdateToClients()
 
 sf::Packet & operator<<(sf::Packet & packet, const ObjectInfo & s)
 {
-	return packet << s.ID << s.Position.x << s.Position.y << s.Direction.x << s.Direction.y << s.Speed << s.IP.toString() << s.Port << s.Connected << s.ObjectType << s.SocketType << s.Shooting;
+	return packet << s.ID << s.Position.x << s.Position.y << s.Size.x << s.Size.y << s.Direction.x << s.Direction.y << s.Speed << s.IP.toString() << s.Port << s.Connected << s.ObjectType << s.SocketType << s.Shooting;
 }
 
 sf::Packet & operator>>(sf::Packet & packet, ObjectInfo & s)
 {
-	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Direction.x >> s.Direction.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected >> s.Shooting >> s.MousePosition.x >> s.MousePosition.y;
+	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Size.x >> s.Size.y >> s.Direction.x >> s.Direction.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected >> s.Shooting >> s.MousePosition.x >> s.MousePosition.y;
 }

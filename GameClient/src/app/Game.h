@@ -13,6 +13,7 @@ class GameObject;
 
 class Game
 {
+	using ObjectMap = std::map<unsigned int, GameObject*>;
 public:
 								Game();
 								Game(int argc, char* argv[]);
@@ -23,12 +24,12 @@ public:
 
 	int							Run();
 
-	void						AddObject(GameObject* object);
+	//void						AddObject(GameObject* object);
 
 	friend sf::Packet& operator<<(sf::Packet& packet, const ObjectInfo& s);
 	friend sf::Packet& operator>>(sf::Packet& packet, ObjectInfo& s);
 private:
-	using ObjectMap = std::map<unsigned int, GameObject*>;
+	
 	void						Init();
 	void						Update();
 	void						Draw();

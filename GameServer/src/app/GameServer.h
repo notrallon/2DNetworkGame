@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Network.hpp>
+#include <SFML/Graphics.hpp>
 #include <map>
 
 #include <shared-structs.h>
@@ -20,7 +21,9 @@ public:
 
 
 private:
-	using ObjectMap = std::map<unsigned int, ObjectInfo*>;
+	using ObjectMap				=	std::map<unsigned int,	ObjectInfo*>;
+	using PlayerRectMap			=	std::map<unsigned int,	sf::FloatRect>;
+	using PlayersBulletRectMap	=	std::map<unsigned int,	sf::FloatRect>;
 
 	void			DisconnectPlayer(ObjectInfo& info);
 	void			UpdatePlayerInfo(ObjectInfo& info, ObjectInfo* player);
@@ -29,9 +32,14 @@ private:
 	void			UpdateObjects(const float& dt);
 	void			SendUpdateToClients();
 
-	bool			m_Running;
-	sf::UdpSocket	m_Socket;
-	ObjectMap		m_GameObjects;
-	unsigned short	m_Port;
-	const sf::Clock	RUNNING_CLOCK; // Const so we still can get the time, but can't restart.
+	bool						m_Running;
+	sf::UdpSocket				m_Socket;
+	ObjectMap					m_GameObjects;
+	// Collision Boxes
+	PlayerRectMap				m_PlayerAreas; // Player Rect
+	PlayersBulletRectMap		m_BulletAreas; // Bullet Rect
+
+
+	unsigned short				m_Port;
+	const sf::Clock				RUNNING_CLOCK; // Const so we still can get the time, but can't restart.
 };

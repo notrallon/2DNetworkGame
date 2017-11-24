@@ -7,14 +7,14 @@ static int s_playerCount = 0;
 
 Player::Player() : m_MousePressed(false)
 {
-	m_Sprite.setSize(sf::Vector2f(40, 80));
+	m_Sprite.setSize(sf::Vector2f(40, 50));
 	m_Sprite.setFillColor(sf::Color::Blue);
 	m_Speed = 300;
 }
 
 Player::Player(SharedContext * context, bool owned) : GameObject::GameObject(context), m_ClientOwned(owned)
 {
-	m_Sprite.setSize(sf::Vector2f(40, 80));
+	m_Sprite.setSize(sf::Vector2f(40, 50));
 	m_Sprite.setOrigin(m_Sprite.getSize().x / 2, m_Sprite.getSize().y / 4);
 
 	if(!owned)
@@ -42,7 +42,6 @@ void Player::Update(const float& dt)
 	if (!m_ClientOwned) return;
 
 	sf::Vector2f dir = sf::Vector2f(0.0f, 0.0f);
-
 
 	if (m_Context->window->hasFocus())
 	{
@@ -80,19 +79,18 @@ void Player::Update(const float& dt)
 				m_Sprite.move(sf::Vector2f(0, m_Speed * dt));
 				dir += sf::Vector2f(0, 1);
 			}
-			
 		}
 
 		//Temp
 		if (m_Sprite.getGlobalBounds().intersects(Game::groundFloor.getGlobalBounds()) && dir.y == 1)
 			dir.y = 0;
 
-
+		//if(m_Sprite.getGlobalBounds().intersects()
 
 		m_ObjectInfo.MousePosition = sf::Vector2f(sf::Mouse::getPosition(*m_Context->window));
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !m_MousePressed)
 		{
-			Shoot();
+			m_MousePressed = true;
 			m_ObjectInfo.Shooting = true;
 		}
 		else if (!sf::Mouse::isButtonPressed(sf::Mouse::Left) && m_MousePressed)
@@ -125,20 +123,4 @@ void Player::SetObjectInfo(ObjectInfo info)
 void Player::Draw(sf::RenderWindow& window)
 {
 	window.draw(m_Sprite);
-}
-
-void Player::Shoot()
-{
-	m_MousePressed = true;
-	sf::Vector2i mousepos = sf::Mouse::getPosition(*m_Context->window);
-
-
-	sf::Vector2f direction = sf::Vector2f(mousepos.x - m_Sprite.getPosition().x, mousepos.y - m_Sprite.getPosition().y);
-
-	float length = abs(sqrt(direction.x * direction.x + direction.y * direction.y));
-
-	direction.x /= length;
-	direction.y /= length;
-	
-	m_Context->game->AddObject(new Projectile(m_Sprite.getPosition(), direction));
 }

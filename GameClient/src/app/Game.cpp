@@ -20,6 +20,8 @@ Game::Game(int argc, char * argv[]) : m_Window(nullptr), m_Context(nullptr)
 		// Treat arg 2 as IP-address
 		m_ServerIP = argv[1];
 		std::cout << "ServerIP: " << m_ServerIP << std::endl;
+		m_ServerPort = 55002;
+		std::cout << "ServerPort: " << m_ServerPort << std::endl;
 
 	}
 	else if (argc >= 3)
@@ -43,7 +45,6 @@ Game::~Game()
 {
 	// Send a packet to the server where info says the player is no longer
 	// connected.
-
 	Disconnect();
 
 	for (auto it : m_GameObjects)
@@ -58,16 +59,12 @@ Game::~Game()
 
 	delete m_Window;
 	m_Window = nullptr;
-
-
 }
 
 int Game::Run()
 {
 	m_Context->game = this;
 	m_Context->window = m_Window;
-
-	//m_Window->setFramerateLimit(200);
 
 	static sf::Clock clock;
 	sf::Time time;
@@ -76,7 +73,6 @@ int Game::Run()
 
 	while (m_Window->isOpen())
 	{
-		//time = clock.getElapsedTime();
 		time = clock.restart();
 		float dt = time.asSeconds();
 		elapsed += dt;
@@ -86,8 +82,6 @@ int Game::Run()
 		{
 			if (evnt.type == sf::Event::Closed)
 			{
-				
-
 				m_Window->close();
 			}
 
@@ -102,25 +96,9 @@ int Game::Run()
 		Update();
 		// Draw
 		Draw();
-
-		// TODO: Breaks net-update, fix to not race for CPU
-		/*sf::Time t2 = clock.getElapsedTime();
-		while (t2.asMilliseconds() < TICKRATE)
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(long long(TICKRATE - t2.asMilliseconds())));
-			t2 = clock.getElapsedTime();
-		}*/
-
-		// Add packets to gameobjects if they don't exist
-		// Update all gameobjects
 	}
 
 	return 0;
-}
-
-void Game::AddObject(GameObject* object)
-{
-	//m_GameObjects.push_back(object);
 }
 
 void Game::Init()
@@ -155,12 +133,10 @@ void Game::Update()
 	Recieve();
 
 	//Temp Code
-	
 	groundFloor.setSize(sf::Vector2f(800, 100));
-	groundFloor.setPosition(0, 500);
+	groundFloor.setPosition(250, 500);
 	groundFloor.setFillColor(sf::Color::Green);
 	
-
 	for (ObjectMap::iterator it = m_GameObjects.begin(); it != m_GameObjects.end(); it++)
 	{
 		if (it->second != nullptr)
@@ -168,7 +144,6 @@ void Game::Update()
 			it->second->Update(dt);
 		}
 	}
-
 }
 
 void Game::Draw()
@@ -183,7 +158,7 @@ void Game::Draw()
 
 	m_Window->display();
 }
-
+//Sends information to server
 void Game::Send()
 {
 	sf::Packet packet;
@@ -213,7 +188,7 @@ void Game::Send()
 		break;
 	}
 }
-
+//Receives information from server
 void Game::Recieve()
 {
 	sf::Packet recievePak;
@@ -327,10 +302,10 @@ void Game::Disconnect()
 
 sf::Packet & operator<<(sf::Packet& packet, const ObjectInfo& s)
 {
-	return packet << s.ID << s.Position.x << s.Position.y << s.Direction.x << s.Direction.y << s.Speed << s.IP.toString() << s.Port << s.Connected << s.Shooting << s.MousePosition.x << s.MousePosition.y << s.ObjectType << s.SocketType;
+	return packet << s.ID << s.Position.x << s.Position.y << s.Size.x << s.Size.y << s.Direction.x << s.Direction.y << s.Speed << s.IP.toString() << s.Port << s.Connected << s.Shooting << s.MousePosition.x << s.MousePosition.y << s.ObjectType << s.SocketType;
 }
 
 sf::Packet & operator>>(sf::Packet& packet, ObjectInfo& s)
 {
-	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Direction.x >> s.Direction.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected >> s.ObjectType;
+	return packet >> s.ID >> s.Position.x >> s.Position.y >> s.Size.x >> s.Size.y >> s.Direction.x >> s.Direction.y >> s.Speed >> s.IP.toString() >> s.Port >> s.Connected >> s.ObjectType;
 }

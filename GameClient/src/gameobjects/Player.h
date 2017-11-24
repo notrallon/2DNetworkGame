@@ -19,12 +19,9 @@ public:
 	void						SetObjectInfo(ObjectInfo info) override;
 
 private:
-	void						Shoot();
 
 	sf::RectangleShape			m_Sprite;
 	unsigned short				m_Speed;
 	bool						m_MousePressed;
 	bool						m_ClientOwned;
-
-	std::vector<GameObject*>	m_Projectiles;
 };

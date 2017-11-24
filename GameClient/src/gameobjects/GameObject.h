@@ -22,6 +22,5 @@ protected:
 	SharedContext*				m_Context;
 	ObjectInfo					m_ObjectInfo;
 
-
 };
 
