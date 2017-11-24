@@ -33,7 +33,6 @@ Player::Player(SharedContext * context, bool owned) : GameObject::GameObject(con
 
 Player::~Player()
 {
-	int hej = 1;
 }
 
 void Player::Update(const float& dt)
@@ -90,10 +89,10 @@ void Player::Update(const float& dt)
 
 
 
+		m_ObjectInfo.MousePosition = sf::Vector2f(sf::Mouse::getPosition(*m_Context->window));
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !m_MousePressed)
 		{
 			Shoot();
-			m_ObjectInfo.MousePosition = sf::Vector2f(sf::Mouse::getPosition(*m_Context->window));
 			m_ObjectInfo.Shooting = true;
 		}
 		else if (!sf::Mouse::isButtonPressed(sf::Mouse::Left) && m_MousePressed)
@@ -112,7 +111,14 @@ const ObjectInfo& Player::GetObjectInfo() const
 
 void Player::SetObjectInfo(ObjectInfo info)
 {
-	m_ObjectInfo = info;
+	m_ObjectInfo.ID = info.ID;
+	m_ObjectInfo.Position = info.Position;
+	m_ObjectInfo.Direction = info.Direction;
+	m_ObjectInfo.Speed = info.Speed;
+	m_ObjectInfo.IP = info.IP;
+	m_ObjectInfo.Port = info.Port;
+	m_ObjectInfo.Connected = info.Connected;
+	m_ObjectInfo.ObjectType = info.ObjectType;
 	m_Sprite.setPosition(m_ObjectInfo.Position);
 }
 

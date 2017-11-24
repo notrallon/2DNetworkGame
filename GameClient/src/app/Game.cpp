@@ -31,6 +31,11 @@ Game::Game(int argc, char * argv[]) : m_Window(nullptr), m_Context(nullptr)
 		m_ServerPort = std::atoi(argv[2]);
 		std::cout << "ServerPort: " << m_ServerPort << std::endl;
 	}
+	else
+	{
+		m_ServerIP = sf::IpAddress::LocalHost.toString();
+		m_ServerPort = 55002;
+	}
 	Init();
 }
 
@@ -125,12 +130,7 @@ void Game::Init()
 	m_Window = new sf::RenderWindow(sf::VideoMode(1600, 900), "LAN Shooter Game");
 	m_Context = new SharedContext();
 
-	//m_Player = new Player(m_Context, true);
-	
 	CreateClientPlayer();
-	// Recieve a message that updates the player info.
-	//Recieve();
-
 }
 
 void Game::Update()
@@ -248,17 +248,18 @@ void Game::Recieve()
 			}
 		}
 		// Get an already existing player
-		object = m_GameObjects.find(recieveInfo.ID)->second;
+		ObjectMap::iterator element = m_GameObjects.find(recieveInfo.ID);
+		object = element->second;
 		
 		// Update the players info.
 		object->SetObjectInfo(recieveInfo);
 		
-		// If another player disconnected.
+		// If another object disconnected or was removed from the server.
 		if (!recieveInfo.Connected)
 		{
-			delete m_GameObjects.find(recieveInfo.ID)->second;
-			m_GameObjects.find(recieveInfo.ID)->second = nullptr;
-			m_GameObjects.erase(recieveInfo.ID);
+			delete object;
+			object = nullptr;
+			m_GameObjects.erase(element);
 		}
 	} break;
 	case sf::Socket::NotReady:

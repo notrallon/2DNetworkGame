@@ -8,9 +8,9 @@ class Player : public GameObject
 {
 	using GameObject::GameObject;
 public:
-	Player();
-	Player(SharedContext* context, bool owned);
-	~Player();
+								Player();
+								Player(SharedContext* context, bool owned);
+								~Player();
 
 	virtual void				Draw(sf::RenderWindow& window) override;
 	virtual void				Update(const float& dt) override;

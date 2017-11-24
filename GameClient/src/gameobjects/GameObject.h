@@ -8,9 +8,9 @@ struct SharedContext;
 class GameObject
 {
 public:
-	GameObject();
-	GameObject(SharedContext* context);
-	~GameObject();
+								GameObject();
+								GameObject(SharedContext* context);
+								~GameObject();
 
 	virtual void				Update(const float& dt) = 0;
 	virtual void				Draw(sf::RenderWindow& window) = 0;
@@ -19,8 +19,8 @@ public:
 	virtual void				SetObjectInfo(ObjectInfo info);
 
 protected:
-	SharedContext*	m_Context;
-	ObjectInfo		m_ObjectInfo;
+	SharedContext*				m_Context;
+	ObjectInfo					m_ObjectInfo;
 
 
 };

@@ -11,16 +11,16 @@ sf::Packet& operator>>(sf::Packet& packet, ObjectInfo& s);
 class GameServer
 {
 public:
-	GameServer();
-	GameServer(int argc, char* argv[]);
-	~GameServer();
+					GameServer();
+					GameServer(int argc, char* argv[]);
+					~GameServer();
 
-	void InitServer();
-	void RunServer();
+	void			InitServer();
+	void			RunServer();
 
 
 private:
-	using PlayerMap = std::map<unsigned int, ObjectInfo*>;
+	using ObjectMap = std::map<unsigned int, ObjectInfo*>;
 
 	void			DisconnectPlayer(ObjectInfo& info);
 	void			UpdatePlayerInfo(ObjectInfo& info, ObjectInfo* player);
@@ -31,6 +31,7 @@ private:
 
 	bool			m_Running;
 	sf::UdpSocket	m_Socket;
-	PlayerMap		m_Players;
+	ObjectMap		m_GameObjects;
 	unsigned short	m_Port;
+	const sf::Clock	RUNNING_CLOCK; // Const so we still can get the time, but can't restart.
 };

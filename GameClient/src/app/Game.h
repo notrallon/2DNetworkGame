@@ -14,9 +14,9 @@ class GameObject;
 class Game
 {
 public:
-	Game();
-	Game(int argc, char* argv[]);
-	~Game();
+								Game();
+								Game(int argc, char* argv[]);
+								~Game();
 
 	//TODO: Temp
 	static sf::RectangleShape groundFloor;
