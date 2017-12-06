@@ -12,12 +12,12 @@ sf::Packet& operator>>(sf::Packet& packet, ObjectInfo& s);
 class GameServer
 {
 public:
-					GameServer();
-					GameServer(int argc, char* argv[]);
-					~GameServer();
+					            GameServer();
+					            GameServer(int argc, char* argv[]);
+					            ~GameServer();
 
-	void			InitServer();
-	void			RunServer();
+	void			            InitServer();
+	void			            RunServer();
 
 
 private:
@@ -25,12 +25,12 @@ private:
 	using PlayerRectMap			=	std::map<unsigned int,	sf::FloatRect>;
 	using PlayersBulletRectMap	=	std::map<unsigned int,	sf::FloatRect>;
 
-	void			DisconnectPlayer(ObjectInfo& info);
-	void			UpdatePlayerInfo(ObjectInfo& info, ObjectInfo* player);
-	ObjectInfo*		CreateNewPlayer(unsigned int ID, ObjectInfo& info);
-	void			SpawnProjectile(ObjectInfo& info, unsigned int& ID);
-	void			UpdateObjects(const float& dt);
-	void			SendUpdateToClients();
+	void			            DisconnectPlayer(ObjectInfo& info);
+	void			            UpdatePlayerInfo(ObjectInfo& info, ObjectInfo* player);
+	ObjectInfo*		            CreateNewPlayer(unsigned int ID, ObjectInfo& info);
+	void			            SpawnProjectile(ObjectInfo& info, unsigned int& ID);
+	void			            UpdateObjects(const float& dt);
+	void			            SendUpdateToClients();
 
 	bool						m_Running;
 	sf::UdpSocket				m_Socket;

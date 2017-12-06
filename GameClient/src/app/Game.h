@@ -42,6 +42,7 @@ private:
 	sf::RenderWindow*			m_Window;
 	Player*						m_Player;
 	ObjectMap					m_GameObjects;
+    sf::Font                    m_Font;
 
 	sf::UdpSocket				m_Socket;
 	sf::IpAddress				m_ServerIP;

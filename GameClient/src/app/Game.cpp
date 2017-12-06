@@ -85,8 +85,15 @@ int Game::Run()
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Return))
 			{
-				m_Window->close();
-				return 1;
+                if (m_Player == nullptr) 
+                {
+                    CreateClientPlayer();
+                }
+                else 
+                {
+                    m_Window->close();
+                    return 1;
+                }
 			}
 		}
 
@@ -105,6 +112,7 @@ void Game::Init()
 	m_Socket.setBlocking(true);
 	m_Window = new sf::RenderWindow(sf::VideoMode(1600, 900), "LAN Shooter Game");
 	m_Context = new SharedContext();
+    m_Font.loadFromFile("kenvector_future.ttf");
 
 	CreateClientPlayer();
 }
@@ -148,12 +156,25 @@ void Game::Update()
 void Game::Draw()
 {
 	m_Window->clear(sf::Color::Magenta);
+    if (m_Player == nullptr) 
+    {
+        sf::Text text;
+        text.setFont(m_Font);
 
-	for (ObjectMap::iterator it = m_GameObjects.begin(); it != m_GameObjects.end(); it++)
-	{
-		it->second->Draw(*m_Window);
-	}
-	m_Window->draw(groundFloor);
+        text.setString("You died! (press Enter to try again)");
+        sf::FloatRect textRect = text.getGlobalBounds();
+        text.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+        text.setPosition(m_Window->getSize().x / 2, m_Window->getSize().y / 2);
+        m_Window->draw(text);
+    }
+    else 
+    {
+        for (ObjectMap::iterator it = m_GameObjects.begin(); it != m_GameObjects.end(); it++) 
+        {
+            it->second->Draw(*m_Window);
+        }
+        m_Window->draw(groundFloor);
+    }
 
 	m_Window->display();
 }
