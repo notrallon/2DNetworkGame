@@ -19,25 +19,23 @@ Game::Game(int argc, char * argv[]) : m_Window(nullptr), m_Context(nullptr)
 	{
 		// Treat arg 2 as IP-address
 		m_ServerIP = argv[1];
-		std::cout << "ServerIP: " << m_ServerIP << std::endl;
 		m_ServerPort = 55002;
-		std::cout << "ServerPort: " << m_ServerPort << std::endl;
 
 	}
 	else if (argc >= 3)
 	{
 		// Treat arg 2 as IP-address
 		m_ServerIP = argv[1];
-		std::cout << "ServerIP: " << m_ServerIP << std::endl;
 		// Treat arg 3 as Port
 		m_ServerPort = std::atoi(argv[2]);
-		std::cout << "ServerPort: " << m_ServerPort << std::endl;
 	}
 	else
 	{
-		m_ServerIP = sf::IpAddress::LocalHost.toString();
+        m_ServerIP = sf::IpAddress::LocalHost.toString();
 		m_ServerPort = 55002;
 	}
+    std::cout << "ServerIP: " << m_ServerIP << std::endl;
+    std::cout << "ServerPort: " << m_ServerPort << std::endl;
 	Init();
 }
 
@@ -113,6 +111,7 @@ void Game::Init()
 
 void Game::Update()
 {
+    if (m_Player == nullptr) { return; }
 	static sf::Clock clock;
 	static float elapsed = 0;
 	const static float TICKRATE = 1.0f / 60.0f;
@@ -161,6 +160,7 @@ void Game::Draw()
 //Sends information to server
 void Game::Send()
 {
+    if (m_Player == nullptr) { return; }
 	sf::Packet packet;
 	ObjectInfo info = m_Player->GetObjectInfo();
 	info.Port = m_Socket.getLocalPort();
@@ -232,8 +232,17 @@ void Game::Recieve()
 		// If another object disconnected or was removed from the server.
 		if (!recieveInfo.Connected)
 		{
-			delete object;
-			object = nullptr;
+            if (recieveInfo.ID == m_Player->GetObjectInfo().ID) 
+            { 
+                delete m_Player;
+                m_Player = nullptr;
+            }
+            else
+            {
+                delete object;
+                object = nullptr;
+            }
+
 			m_GameObjects.erase(element);
 		}
 	} break;

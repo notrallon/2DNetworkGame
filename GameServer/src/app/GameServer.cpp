@@ -281,15 +281,15 @@ void GameServer::UpdateObjects(const float & dt)
 				if (objBullet->ObjectType != ObjectInfo::ObjectTypes::Projectile)
 					continue;
 				//if objBullets ID is the same as the first (it) iteration
-				if (objBullet->ID == m_BulletAreas.find(obj->ID)->first)
+				if (objBullet->ID == obj->ID)
 					continue;
 				// if player collides with bullet
 				if (m_PlayerAreas.find(obj->ID)->second.intersects(m_BulletAreas.find(objBullet->ID)->second))
 				{
 					std::cout << "Hit!" << std::endl;
 
-					//Add Hitted Player to the "to be destroyed" list
-					destroy.emplace(obj->ID, obj);
+					// Disconnect the player that was hit
+                    obj->Connected = false;
 				}
 			}
 		}// Collision handling End.
